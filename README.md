@@ -16,9 +16,10 @@ It will show status right away and refresh every 30 seconds. After
 any action button is pressed, it will run get status for an
 immidiate refresh.
 
-At this point it only works with one server because
-I only have one. If anyone would like to add that
-ability feel free. I'd love to see it get better in
+At this point it only shows multiple servers but can only control
+first in the list. I will make a function to work with the
+instance selection dropdown unless anyone else would like to show
+me how its done. I'd love to see it get better in
 the wild.
 
 enjoy!
