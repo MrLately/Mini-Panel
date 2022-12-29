@@ -5,6 +5,8 @@ import subprocess
 import os
 import headers_data
 
+headers_data = headers_data.headers
+
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 
 root = tk.Tk()
@@ -12,29 +14,37 @@ root.title("Mini Panel 4 SP")
 screen_width = root.winfo_screenwidth()
 message_label = tk.Label(root, text="")
 
-headers_data = headers_data.headers
-    
+# Create a list of instances
+instances = ["instance1", "instance2", "instance3"]
+
+# Create a variable to store the selected instance
+selected_instance = tk.StringVar(root)
+
+# Set the default value for the selected instance
+selected_instance.set(instances[0])
+
+# Create the dropdown menu
+instance_menu = tk.OptionMenu(root, selected_instance, *instances)
+instance_menu.pack()
+   
 def get_server_status():
     # Read the credentials.json file
-    with open("credentials.json", "w") as f:
-        json.dump(credentials, f)
-        f.flush()
+    with open("credentials.json", 'r') as f:
+        data = json.loads(f.read())
 
+    # Make the GET request to the server status endpoint
     response = requests.get('https://api-v1.serverpoint.com/vs/status', headers=headers_data)
     
-    # Print the server status
+    # Extract the server status from the response
     server_status = response.json()
     vs_instance_status = server_status["vs_instance_status"]
+    instance_id = []
+    messages = []
     for instance in vs_instance_status:
-        # Update the server_id field with the instance ID
-        credentials["server_id"] = instance["id"]
+        # Add the instance ID to the list of instance IDs
+        instance_id.append(instance["id"])
 
-        # Write the updated data back to the file
-        with open("credentials.json", "w") as f:
-            json.dump(credentials, f)
-            f.flush()
-        
-        # Create a message with the information for this instance
+        # Create a message for this instance
         message = "Instance ID: {}\nStatus: {}\nOS: {}\nOS Class: {}\nOS Family: {}\nOS Name: {}\nOS Subname: {}\nDate Deployment Ordered: {}\nDate Deployment Completed: {}\nOS Updates Available: {}\nOS Updates Status: {}\nIs Deployed: {}".format(
             instance["id"],
             instance["status"],
@@ -49,9 +59,18 @@ def get_server_status():
             instance["os_updates_status"],
             instance["is_deployed"]
         )
-        
-    # Update the message label with the message for this instance
-    message_label.config(text=message)
+        messages.append(message)
+    
+    # Update the message label with the messages for all instances
+    message_label.config(text="\n\n".join(messages))
+    
+    # Update the credentials dictionary with the list of instance IDs
+    credentials["instance_id"] = instance_id
+
+# Write the updated data back to the file
+    with open("credentials.json", "w") as f:
+        json.dump(credentials, f)
+        f.flush()
     
     # Call the function again after 30 seconds
     root.after(30000, get_server_status)
@@ -75,7 +94,8 @@ def get_server_stats():
         f.flush()
 
     # Make the GET request to the server statistics endpoint
-    response = requests.get(f'https://api-v1.serverpoint.com/vs/instance/{credentials["server_id"]}/stats', headers=headers_data)
+    response = requests.get(f'https://api-v1.serverpoint.com/vs/instance/{credentials["instance_id"][0]}/stats', headers=headers_data)
+
     
     # Extract the server statistics from the response
     server_stats = response.json()["vs_resource_statistics"][0]
@@ -95,13 +115,13 @@ def get_server_stats():
     message += "\nRAM usage (last 24 hours):"
     for hour in ram_usage:
         message += f"\n  Hour {hour['hour']}: {hour['ram_usage_percentage']}%"
-        
+       
     # Update the message label with the server statistics message
     message_label.config(text=message)
-           
+          
 # code to use the credentials
-def send_request(server_id, access_token, action):
-    url = f"https://api-v1.serverpoint.com/vs/instance/{server_id}/actions"
+def send_request(instance_id, access_token, action):
+    url = f"https://api-v1.serverpoint.com/vs/instance/{instance_id}/actions"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {access_token}"
@@ -115,17 +135,17 @@ def send_request(server_id, access_token, action):
     else:
         message_label.config(text=f"Failed to {action} server")
 
-def turn_on_server(server_id, access_token):
-    send_request(server_id, access_token, "on")
+def turn_on_server(instance_id, access_token):
+    send_request(instance_id, access_token, "on")
     
-def turn_off_server(server_id, access_token):
-    send_request(server_id, access_token, "off")
+def turn_off_server(instance_id, access_token):
+    send_request(instance_id, access_token, "off")
 
-def reboot_server(server_id, access_token):
-    send_request(server_id, access_token, "reboot")
+def reboot_server(instance_id, access_token):
+    send_request(instance_id, access_token, "reboot")
 
-def update_server(server_id, access_token):
-    send_request(server_id, access_token, "installupdates")
+def update_server(instance_id, access_token):
+    send_request(instance_id, access_token, "installupdates")
     
 message_label = tk.Label(root, text="")
 message_label.pack(side='bottom')
@@ -136,16 +156,16 @@ status_button.pack(side='left')
 stats_button = tk.Button(root, text="Get Status", command=get_server_status)
 stats_button.pack(side='left', after=status_button)
 
-on_button = tk.Button(root, text="Turn On", command=lambda: turn_on_server(credentials["server_id"], credentials["access_token"]))
+on_button = tk.Button(root, text="Turn On", command=lambda: turn_on_server(credentials["instance_id"][0], credentials["access_token"]))
 on_button.pack(side='left')
 
-off_button = tk.Button(root, text="Turn Off", command=lambda: turn_off_server(credentials["server_id"], credentials["access_token"]))
+off_button = tk.Button(root, text="Turn Off", command=lambda: turn_off_server(credentials["instance_id"][0], credentials["access_token"]))
 off_button.pack(side='left', after=on_button)
 
-reboot_button = tk.Button(root, text="Reboot", command=lambda: reboot_server(credentials["server_id"], credentials["access_token"]))
+reboot_button = tk.Button(root, text="Reboot", command=lambda: reboot_server(credentials["instance_id"][0], credentials["access_token"]))
 reboot_button.pack(side='left', after=off_button)
 
-update_button = tk.Button(root, text="Update", command=lambda: update_server(credentials["server_id"], credentials["access_token"]))
+update_button = tk.Button(root, text="Update", command=lambda: update_server(credentials["instance_id"][0], credentials["access_token"]))
 update_button.pack(side='left', after=reboot_button)
 
 get_server_status()
