@@ -44,9 +44,3 @@ else:
     # If the request was not successful, print the status code and the response content
     print(f'Request failed with status code {response.status_code}')
     print(response.content)
-
-
-
-
-
-
