@@ -4,6 +4,7 @@ import json
 import subprocess
 import os
 import headers_data
+from tkinter import StringVar
 
 headers_data = headers_data.headers
 
@@ -14,18 +15,6 @@ root.title("Mini Panel 4 SP")
 screen_width = root.winfo_screenwidth()
 message_label = tk.Label(root, text="")
 
-# Create a list of instances
-instances = ["instance1", "instance2", "instance3"]
-
-# Create a variable to store the selected instance
-selected_instance = tk.StringVar(root)
-
-# Set the default value for the selected instance
-selected_instance.set(instances[0])
-
-# Create the dropdown menu
-instance_menu = tk.OptionMenu(root, selected_instance, *instances)
-instance_menu.pack()
    
 def get_server_status():
     # Read the credentials.json file
@@ -86,7 +75,39 @@ except FileNotFoundError:
     with open("credentials.json", 'r') as f:
         credentials = json.loads(f.read())
     get_server_status()
-      
+
+
+try:
+    with open("credentials.json", 'r') as f:
+        credentials = json.loads(f.read())
+        selected_instance_value = credentials.get("selected_instance", credentials["instance_id"][0])
+except FileNotFoundError:
+    selected_instance_value = credentials["instance_id"][0]
+
+# create a variable to store the selected instance
+selected_instance = StringVar(root)
+
+# set the initial value of the variable to the first instance ID in the credentials dictionary or the selected_instance value
+selected_instance.set(selected_instance_value)
+
+# create the option menu widget
+instance_dropdown = tk.OptionMenu(root, selected_instance, *credentials["instance_id"])
+
+# update the credentials dictionary with the selected instance when the user makes a selection
+def update_instance(*args):
+    credentials["selected_instance"] = selected_instance.get()
+    # write the updated data back to the file
+    with open("credentials.json", "w") as f:
+        json.dump(credentials, f)
+        f.flush()
+
+# bind the trace event to the update_instance function
+selected_instance.trace("w", update_instance)
+
+# pack the dropdown menu to display it in the GUI
+instance_dropdown.pack()
+
+     
 def get_server_stats():
     # Read the credentials.json file
     with open("credentials.json", "w") as f:
@@ -94,7 +115,7 @@ def get_server_stats():
         f.flush()
 
     # Make the GET request to the server statistics endpoint
-    response = requests.get(f'https://api-v1.serverpoint.com/vs/instance/{credentials["instance_id"][0]}/stats', headers=headers_data)
+    response = requests.get(f'https://api-v1.serverpoint.com/vs/instance/{credentials["selected_instance"]}/stats', headers=headers_data)
 
     
     # Extract the server statistics from the response
@@ -117,11 +138,11 @@ def get_server_stats():
         message += f"\n  Hour {hour['hour']}: {hour['ram_usage_percentage']}%"
        
     # Update the message label with the server statistics message
-    message_label.config(text=message)
-          
+    message_label.config(text=message)  
+      
 # code to use the credentials
-def send_request(instance_id, access_token, action):
-    url = f"https://api-v1.serverpoint.com/vs/instance/{instance_id}/actions"
+def send_request(selected_instance, access_token, action):
+    url = f"https://api-v1.serverpoint.com/vs/instance/{selected_instance}/actions"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {access_token}"
@@ -135,18 +156,18 @@ def send_request(instance_id, access_token, action):
     else:
         message_label.config(text=f"Failed to {action} server")
 
-def turn_on_server(instance_id, access_token):
-    send_request(instance_id, access_token, "on")
+def turn_on_server(selected_instance, access_token):
+    send_request(selected_instance, access_token, "on")
     
-def turn_off_server(instance_id, access_token):
-    send_request(instance_id, access_token, "off")
+def turn_off_server(selected_instance, access_token):
+    send_request(selected_instance, access_token, "off")
 
-def reboot_server(instance_id, access_token):
-    send_request(instance_id, access_token, "reboot")
+def reboot_server(selected_instance, access_token):
+    send_request(selected_instance, access_token, "reboot")
 
-def update_server(instance_id, access_token):
-    send_request(instance_id, access_token, "installupdates")
-    
+def update_server(selected_instance, access_token):
+    send_request(selected_instance, access_token, "installupdates")
+   
 message_label = tk.Label(root, text="")
 message_label.pack(side='bottom')
 
@@ -156,16 +177,16 @@ status_button.pack(side='left')
 stats_button = tk.Button(root, text="Get Status", command=get_server_status)
 stats_button.pack(side='left', after=status_button)
 
-on_button = tk.Button(root, text="Turn On", command=lambda: turn_on_server(credentials["instance_id"][0], credentials["access_token"]))
+on_button = tk.Button(root, text="Turn On", command=lambda: turn_on_server(credentials["selected_instance"], credentials["access_token"]))
 on_button.pack(side='left')
 
-off_button = tk.Button(root, text="Turn Off", command=lambda: turn_off_server(credentials["instance_id"][0], credentials["access_token"]))
+off_button = tk.Button(root, text="Turn Off", command=lambda: turn_off_server(credentials["selected_instance"], credentials["access_token"]))
 off_button.pack(side='left', after=on_button)
 
-reboot_button = tk.Button(root, text="Reboot", command=lambda: reboot_server(credentials["instance_id"][0], credentials["access_token"]))
+reboot_button = tk.Button(root, text="Reboot", command=lambda: reboot_server(credentials["selected_instance"], credentials["access_token"]))
 reboot_button.pack(side='left', after=off_button)
 
-update_button = tk.Button(root, text="Update", command=lambda: update_server(credentials["instance_id"][0], credentials["access_token"]))
+update_button = tk.Button(root, text="Update", command=lambda: update_server(credentials["selected_instance"], credentials["access_token"]))
 update_button.pack(side='left', after=reboot_button)
 
 get_server_status()
