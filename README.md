@@ -1,26 +1,15 @@
-# Mini-Panel
-Mini Panel is a server control panel for www.serverpoint.com servers
-with minimal functionality. It can log you in, get server status and
-stats. It can also perform a few actions such as turn on and off,
-reboot, and update.
+Mini-Panel
+Mini Panel is a server control panel for servers hosted on www.serverpoint.com, with minimal functionality. It can log you in, get server status and stats, and also perform actions such as turning on and off, rebooting, and updating.
 
-pip3 install -r requirements.txt
-or pip install requests, so far its all it uses.
+To use the script, first run pip3 install -r requirements.txt or pip install requests to install the necessary dependencies.
 
-put email on first line of credentials.txt
-put password on the second line of credentials.txt
+Next, add your email and password in the credentials.txt file with your email on the first line and password on the second line.
 
-run server_control.py
+Run the script with python server_control.py and it will show the status of your servers right away and refresh every 30 seconds. After any action button is pressed, the script will run the get status function for an immediate refresh.
 
-It will show status right away and refresh every 30 seconds. After
-any action button is pressed, it will run get status for an
-immidiate refresh.
+The script now allows for the selection of multiple servers, and the instance selection dropdown allows the user to select and control any server in the list.
 
-At this point it only shows multiple servers but can only control
-first in the list. I will make a function to work with the
-instance selection dropdown unless anyone else would like to show
-me how its done. I'd love to see it get better in
-the wild.
+Enjoy!
 
 enjoy!
 ![example](https://user-images.githubusercontent.com/94589563/208738741-ddace90d-815f-4ab7-88fc-01da94b8f291.png)
