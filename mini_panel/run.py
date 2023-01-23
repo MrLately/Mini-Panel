@@ -1,4 +1,3 @@
-import tkinter as tk
 from tkinter import simpledialog
 import subprocess
 import os
@@ -19,4 +18,4 @@ if not os.path.exists("credentials.txt"):
         f.write(email + '\n')
         f.write(password)
     
-subprocess.run(["python", "server_control.py"])
+subprocess.run(["python", "-Xfrozen_modules=off", "server_control.py"])
