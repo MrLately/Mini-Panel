@@ -11,7 +11,6 @@ The script now allows for the selection of multiple servers, and the instance se
 
 Enjoy!
 
-enjoy!
 ![mp1](https://user-images.githubusercontent.com/94589563/213945887-9b7e95fc-e015-4520-9001-868084358eb6.png)
 ![example](https://user-images.githubusercontent.com/94589563/208738741-ddace90d-815f-4ab7-88fc-01da94b8f291.png)
 ![eample2](https://user-images.githubusercontent.com/94589563/208738804-a9892f1f-84dd-47c5-839a-4ca6e5dda39a.png)
